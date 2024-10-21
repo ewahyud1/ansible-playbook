@@ -1,0 +1,22 @@
+[all:vars]
+# ansible_user: <username>  ## not recommended unless running playbook locally on your own computer
+# ansible_password: <password>    ## not recommended unless running playbook locally on your own computer
+ansible_port=5986
+ansible_connection=winrm
+ansible_winrm_scheme=https
+ansible_winrm_server_cert_validation=ignore
+ansible_winrm_transport=ntlm
+
+[all:children]
+nonprod
+prod
+
+[nonprod]
+dev-server01
+dev-server02
+dev-server03
+
+[prod]
+prod=server11
+prod=server12
+prod=server13
