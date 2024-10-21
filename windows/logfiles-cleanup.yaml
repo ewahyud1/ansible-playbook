@@ -1,0 +1,39 @@
+---  
+- name: Log/Files Cleanup in Windows OS
+  hosts: all
+  vars:
+    # Specify folder paths here where logs/files will be deleted
+    logs_location: [
+      'C:\TEMP\sampleFolder', 
+      'C:\main_folder\sub-folder',
+      'C:\main_folder\sub-folder\sub-sub-folder'
+    ]
+    # [optional] specify file extension/type to be deleted
+    filetype: ['*.txt', '*.log']  
+                
+  tasks:
+    - name: Collect logs files from the list of Folders
+      win_find:
+        paths: "{{ logs_location }}"  ### variable defined in line #6
+        age: 2d  ### [optional] file age (reference: https://docs.ansible.com/ansible/2.9/modules/win_find_module.html#parameter-age)
+        age_stamp: ctime ### [optional] created date/time (reference: https://docs.ansible.com/ansible/2.9/modules/win_find_module.html#parameter-age_stamp)
+        patterns: "{{ filetype }}"  ### variable defined in line #12
+        recurse: true
+      register: logFiles
+
+    - name: Display what are the files (inc. their paths) to be deleted
+      vars:
+        files: "{{ logFiles.files | json_query('[].path') }}"
+      debug:
+        var: files
+      when: logFiles.matched > 0
+
+    - name: Deleting the files that were located
+      tags: delete
+      vars:
+        files: "{{ logFiles.files | json_query('[].path') }}"
+      win_file:
+        path: "{{ item }}"
+        state: absent
+      with_items: "{{ files }}"
+      when: logFiles.matched > 0
